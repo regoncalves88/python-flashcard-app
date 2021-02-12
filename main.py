@@ -6,8 +6,13 @@ BACKGROUND_COLOR = "#B1DDC6"
 FONT_TITLE = ("Ariel", 40, "italic")
 FONT_WORD = ("Ariel", 60, "bold")
 
-portuguese_data = pd.read_csv("data/portuguese_words.csv")
-data = portuguese_data.to_dict(orient="records")
+try:
+    portuguese_data = pd.read_csv("data/words_to_learn.csv")
+except FileNotFoundError:
+    portuguese_data = pd.read_csv("data/portuguese_words.csv")
+finally:
+    words_to_learn = portuguese_data.to_dict(orient="records")
+
 next_word = {}
 
 
@@ -15,7 +20,7 @@ def next_card():
     global next_word, flip_timer
 
     window.after_cancel(flip_timer)
-    next_word = choice(data)
+    next_word = choice(words_to_learn)
     canvas.itemconfig(card_image, image=canvas_front_bg)
     canvas.itemconfig(card_title, text="Portuguese", fill="black")
     canvas.itemconfig(card_word, text=next_word["Portuguese"], fill="black")
@@ -26,6 +31,13 @@ def flip_card():
     canvas.itemconfig(card_image, image=canvas_back_bg)
     canvas.itemconfig(card_title, text="English", fill="white")
     canvas.itemconfig(card_word, text=next_word["English"], fill="white")
+
+
+def is_known():
+    words_to_learn.remove(next_word)
+    data = pd.DataFrame(words_to_learn)
+    data.to_csv("data/words_to_learn.csv", index=False)
+    next_card()
 
 
 window = Tk()
@@ -47,7 +59,7 @@ unknown_button = Button(image=unknown_button_img, highlightthickness=0, command=
 unknown_button.grid(column=0, row=1)
 
 known_button_img = PhotoImage(file="images/right.png")
-known_button = Button(image=known_button_img, highlightthickness=0, command=next_card)
+known_button = Button(image=known_button_img, highlightthickness=0, command=is_known)
 known_button.grid(column=1, row=1)
 
 next_card()
